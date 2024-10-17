@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tool Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-5">
+    <div id="toolContainer" class="space-y-4"></div>
+
+    <script>
+        const apiUrl = 'https://manuscript-suggestion-service-1029945113028.us-central1.run.app/tools';  // Your FastAPI backend URL
+
+        // Function to fetch tools from backend
+        async function fetchTools() {
+            const response = await fetch(apiUrl);
+            const tools = await response.json();
+            displayTools(tools);
+        }
+
+        // Function to display tools as accordion
+        function displayTools(tools) {
+            const container = document.getElementById("toolContainer");
+            container.innerHTML = ''; // Clear previous content
+
+            tools.forEach(tool => {
+                const toolItem = document.createElement("div");
+                toolItem.classList.add("bg-white", "shadow", "rounded-lg", "p-4");
+
+                toolItem.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <h2 class="font-bold text-lg">${tool.Tool}</h2>
+                        <button onclick="toggleAccordion('${tool.Tool}')" class="text-blue-500">Toggle</button>
+                    </div>
+                    <div id="content-${tool.Tool}" class="hidden mt-2">
+                        <textarea id="textarea-${tool.Tool}" class="w-full border rounded p-2 mb-2">${tool.Content}</textarea>
+                        <button onclick="saveTool('${tool.Tool}')" class="bg-blue-500 text-white px-4 py-2 rounded">Save</button>
+                    </div>
+                `;
+
+                container.appendChild(toolItem);
+            });
+        }
+
+        // Function to toggle accordion
+        function toggleAccordion(toolName) {
+            const contentDiv = document.getElementById(`content-${toolName}`);
+            contentDiv.classList.toggle("hidden");
+        }
+
+        // Function to save updated content to backend
+        async function saveTool(toolName) {
+            const updatedContent = document.getElementById(`textarea-${toolName}`).value;
+
+            const response = await fetch(`${apiUrl}/${toolName}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    Content: updatedContent,
+                    MaxToken: 2000  // You can update this to make it dynamic
+                })
+            });
+
+            const result = await response.json();
+            alert(result.message);
+        }
+
+        // Fetch tools on page load
+        fetchTools();
+    </script>
+</body>
+</html>
